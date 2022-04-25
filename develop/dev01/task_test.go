@@ -1,6 +1,7 @@
 package main
 
 import (
+	"develop/current_time"
 	"testing"
 	"time"
 )
@@ -8,7 +9,7 @@ import (
 func TestGetCurrTime(t *testing.T) {
 	now := time.Now()
 
-	currTime, err := getCurrTime()
+	currTime, err := current_time.GetCurrTime()
 	if err != nil {
 		t.Error(err)
 	}

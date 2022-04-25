@@ -4,36 +4,43 @@ import (
 	"fmt"
 )
 
-type Creator struct {
-	factory factory
+/*
+	Реализовать паттерн «фабричный метод».
+Объяснить применимость паттерна, его плюсы и минусы, а также реальные примеры использования данного примера на практике.
+	https://en.wikipedia.org/wiki/Factory_method_pattern
+*/
+
+// Engine Интерфейс для создания разных двигателей
+type Engine interface {
+	construct()
 }
 
-func (c *Creator) Operation() {
-	product := c.factory.factoryMethod()
-	product.method()
+// CarEngine структура для создания автомобильных двигателей
+type CarEngine struct {
 }
 
-type factory interface {
-	factoryMethod() Product
+func (c CarEngine) construct() {
+	fmt.Println("Construct car engine")
 }
 
-type ConcreteCreator struct{}
-
-func (c *ConcreteCreator) factoryMethod() Product {
-	return new(ConcreteProduct)
+// AirplaneEngine структура для создания самолётных двигателей
+type AirplaneEngine struct {
 }
 
-type Product interface {
-	method()
+func (a AirplaneEngine) construct() {
+	fmt.Println("Construct airplane engine")
 }
 
-type ConcreteProduct struct{}
-
-func (p *ConcreteProduct) method() {
-	fmt.Println("ConcreteProduct.method()")
+// ConstructEngine Конструктор, который определяет тип двигателя для создания, удовляющему интерфейсу Engine ,двигателя
+func ConstructEngine(engineType string) Engine {
+	switch engineType {
+	case "car":
+		return CarEngine{}
+	case "airplane":
+		return AirplaneEngine{}
+	}
+	return nil
 }
-
 func main() {
-	creator := Creator{new(ConcreteCreator)}
-	creator.Operation()
+	ConstructEngine("airplane").construct()
 }

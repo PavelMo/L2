@@ -4,6 +4,12 @@ import (
 	"fmt"
 )
 
+/*
+	Реализовать паттерн «посетитель».
+Объяснить применимость паттерна, его плюсы и минусы, а также реальные примеры использования данного примера на практике.
+	https://en.wikipedia.org/wiki/Visitor_pattern
+*/
+
 type PCparts interface {
 	Accept(PCVisitor)
 }
@@ -28,11 +34,11 @@ type PersonalComputer struct {
 	parts []PCparts
 }
 
-func NewCar() *PersonalComputer {
+func NewPC() *PersonalComputer {
 	pc := new(PersonalComputer)
 	pc.parts = []PCparts{
-		&CPUpart{"Some CPU"},
-		&GPUpart{"Some GPU"},
+		&CPUpart{"Intel"},
+		&GPUpart{"Nvidia"},
 	}
 	return pc
 }
@@ -43,29 +49,29 @@ func (pc *PersonalComputer) Accept(visitor PCVisitor) {
 	}
 }
 
-//Interface of the visitor
+// PCVisitor - интрефейс посетителя
 type PCVisitor interface {
 	visitCPU(cpu *CPUpart)
 	visitGPU(engine *GPUpart)
 }
 
-//Concrete Implementation of the visitor
+// реализация посетителя
+
 type GetMessageVisitor struct {
 	Messages []string
 }
 
-func (this *GetMessageVisitor) visitCPU(cpu *CPUpart) {
-	this.Messages = append(this.Messages, fmt.Sprintf("Visiting the %v wheel\n", cpu.Name))
+func (g *GetMessageVisitor) visitCPU(cpu *CPUpart) {
+	g.Messages = append(g.Messages, fmt.Sprintf("Visiting %s cpu\n", cpu.Name))
 }
 
-func (this *GetMessageVisitor) visitGPU(gpu *GPUpart) {
-	this.Messages = append(this.Messages, fmt.Sprintf("Visiting engine\n"))
+func (g *GetMessageVisitor) visitGPU(gpu *GPUpart) {
+	g.Messages = append(g.Messages, fmt.Sprintf("Visiting %s gpu\n", gpu.Name))
 }
 
-//Usage of the visitor
 func main() {
-	car := NewCar()
+	pc := NewPC()
 	visitor := new(GetMessageVisitor)
-	car.Accept(visitor)
+	pc.Accept(visitor)
 	fmt.Println(visitor.Messages)
 }

@@ -23,7 +23,7 @@ func getSite() {
 		log.Fatalln(err)
 	}
 
-	outputFile, err := os.Create("test-output.html")
+	outputFile, err := os.Create("output.html")
 	if err != nil {
 		log.Fatalln("Error occurred while creating new file:", err)
 	}

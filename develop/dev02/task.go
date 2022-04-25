@@ -23,6 +23,7 @@ import (
 В случае если была передана некорректная строка функция должна возвращать ошибку. Написать unit-тесты.
 Функция должна проходить все тесты. Код должен проходить проверки go vet и golint.
 */
+
 var errString = errors.New("incorrect input")
 
 func Unpack(st string) (string, error) {
@@ -36,27 +37,42 @@ func Unpack(st string) (string, error) {
 
 	for i := 0; i < len(runes); {
 		switch {
-		case i == len(runes)-1:
-			res.WriteRune(runes[i])
+
+		case runes[i] == '\\':
+			if i+1 == len(runes) {
+				i++
+				continue
+			}
 			i++
-
+			fallthrough
+		case i == len(runes)-1:
+			if i == len(runes)-1 {
+				res.WriteRune(runes[i])
+				i++
+				continue
+			}
+			fallthrough
 		case unicode.IsDigit(runes[i+1]):
-			var (
-				countSt strings.Builder
-				iSkip   int
-			)
+			if unicode.IsDigit(runes[i+1]) {
+				var (
+					countSt strings.Builder
+					iSkip   int
+				)
 
-			for j := i + 1; j < len(runes) && unicode.IsDigit(runes[j]); {
-				countSt.WriteString(string(runes[j]))
-				j += 1
-				iSkip = j
+				for j := i + 1; j < len(runes) && unicode.IsDigit(runes[j]); {
+					countSt.WriteString(string(runes[j]))
+					j += 1
+					iSkip = j
+				}
+				count, err := strconv.Atoi(countSt.String())
+				if err != nil {
+					return "", err
+				}
+				res.WriteString(strings.Repeat(string(runes[i]), count))
+				i = iSkip
+				continue
 			}
-			count, err := strconv.Atoi(countSt.String())
-			if err != nil {
-				fmt.Println(err)
-			}
-			res.WriteString(strings.Repeat(string(runes[i]), count))
-			i = iSkip
+			fallthrough
 		default:
 			res.WriteRune(runes[i])
 			i++
@@ -66,9 +82,9 @@ func Unpack(st string) (string, error) {
 	return res.String(), nil
 }
 func main() {
-	strs := []string{"a4bc2d5e", "abcd2", "45", ""}
+	list := []string{"a4bc2d5e", "abcd2", "a45", "", `qwe\4\5`, `qwe\45`, `qwe\\5`, `qwe\`}
 
-	for _, st := range strs {
+	for _, st := range list {
 		unpacked, err := Unpack(st)
 		if err != nil {
 			_, err = fmt.Fprintln(os.Stderr, err)

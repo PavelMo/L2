@@ -30,7 +30,7 @@ func main() {
 
 	timeOut := flag.Duration("timeout", 10*time.Second, "Time out flag")
 	flag.Parse()
-
+	time.Sleep(time.Second)
 	conn, err := net.DialTimeout("tcp", address, *timeOut)
 	if err != nil {
 		log.Fatalln(err)

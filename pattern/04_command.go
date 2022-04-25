@@ -16,15 +16,17 @@ type CheckGPU struct {
 }
 
 func (c *CheckGPU) Execute() string {
-	return "GPU alive"
+	return "GPU alive and well"
 }
+
+//Запрос к бизнес логике
 func request(part string) string {
 	commands := map[string]Command{
 		"CPU": &CheckCPU{},
 		"GPU": &CheckGPU{},
 	}
 	if command := commands[part]; command == nil {
-		return "No such command found, throw error?"
+		return "No such command found"
 	} else {
 		return command.Execute()
 	}

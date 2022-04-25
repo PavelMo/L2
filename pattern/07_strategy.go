@@ -4,11 +4,18 @@ import (
 	"fmt"
 )
 
+/*
+	Реализовать паттерн «стратегия».
+Объяснить применимость паттерна, его плюсы и минусы, а также реальные примеры использования данного примера на практике.
+	https://en.wikipedia.org/wiki/Strategy_pattern
+*/
+
+// Context Контекст который меняет стратегию
 type Context struct {
 	strategy func()
 }
 
-func (c *Context) Execute() {
+func (c *Context) ExecuteStrategy() {
 	c.strategy()
 }
 
@@ -17,14 +24,14 @@ func (c *Context) SetStrategy(strategy func()) {
 }
 
 func main() {
-	concreteStrategyA := func() {
-		fmt.Println("concreteStrategyA()")
+	FirstAlgorithm := func() {
+		fmt.Println("Running first algorithm")
 	}
-	concreteStrategyB := func() {
-		fmt.Println("concreteStrategyB()")
+	SecondAlgorithm := func() {
+		fmt.Println("Running second algorithm")
 	}
-	context := Context{concreteStrategyA}
-	context.Execute()
-	context.SetStrategy(concreteStrategyB)
-	context.Execute()
+	context := Context{FirstAlgorithm}
+	context.ExecuteStrategy()
+	context.SetStrategy(SecondAlgorithm)
+	context.ExecuteStrategy()
 }

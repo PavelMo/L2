@@ -1,10 +1,10 @@
 package main
 
 import (
+	"develop/current_time"
 	"fmt"
-	"github.com/beevik/ntp"
+	"log"
 	"os"
-	"time"
 )
 
 /*
@@ -18,23 +18,11 @@ import (
 */
 
 func main() {
-	currTime, err := getCurrTime()
+	currTime, err := current_time.GetCurrTime()
 	if err != nil {
 		//Если возникают ошибки, выводим их в STDERR
-		_, err = fmt.Fprintln(os.Stderr, "Error occurred while getting current time:", err)
-		if err != nil {
-			fmt.Println(err)
-		}
+		log.Println("Error occurred while getting current time:", err)
 		os.Exit(1)
 	}
 	fmt.Println("Get current time:", currTime)
-}
-
-//Получаем время с NTP сервера и в случае ошибки возвращаем её
-func getCurrTime() (time.Time, error) {
-	currTime, err := ntp.Time("0.beevik-ntp.pool.ntp.org")
-	if err != nil {
-		return time.Time{}, err
-	}
-	return currTime, nil
 }

@@ -30,13 +30,15 @@ start := time.Now()
 	sig(1*time.Hour),
 	sig(1*time.Minute),
 )
-fmt.Printf(“fone after %v”, time.Since(start))
+fmt.Printf(“done after %v”, time.Since(start))
 */
+
 func or(channels ...<-chan interface{}) <-chan interface{} {
 	mainChan := make(chan interface{}, len(channels))
 
 	for _, channel := range channels {
 		go func(channel <-chan interface{}) {
+			//Ждём в гоурутине пока закроется какой нибудь канал и главный канал получит nil интерфейс
 			mainChan <- <-channel
 		}(channel)
 	}
@@ -62,5 +64,7 @@ func main() {
 		sig(1*time.Hour),
 		sig(1*time.Minute),
 	)
+	fmt.Printf("done after %v", time.Since(start))
+	<-or(sig(2 * time.Second))
 	fmt.Printf("done after %v", time.Since(start))
 }

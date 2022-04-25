@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"sort"
 	"strconv"
@@ -37,31 +38,34 @@ func main() {
 		u   bool
 		err error
 	)
-
-	flag.IntVar(&k, "k", -1, "указание колонки для сортировки")
+	flag.IntVar(&k, "k", 1, "указание колонки для сортировки")
 	flag.BoolVar(&n, "n", false, "сортировать по числовому значению")
 	flag.BoolVar(&r, "r", false, "сортировать в обратном порядке")
 	flag.BoolVar(&u, "u", false, "не выводить повторяющиеся строки")
 	flag.Parse()
 
-	var lines = []string{""}
-	input, _ := os.Open("test.txt")
-	defer input.Close()
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
+	var lines = make([]string, 0)
+	if len(flag.Args()) < 1 {
+		log.Println("no files to sort")
 	}
-
+	for _, val := range flag.Args() {
+		input, _ := os.Open(val)
+		scanner := bufio.NewScanner(input)
+		for scanner.Scan() {
+			lines = append(lines, scanner.Text())
+		}
+		closeFile(input)
+	}
 	if u {
-		lines = deleteDuplicates(lines)
+		lines = deleteDuplicates(lines, k-1)
 	}
-	if !n && k > -1 {
-		lines = columnSort(k, lines)
+	if !n {
+		lines = columnSort(k-1, lines)
 	}
 	if n {
-		lines, err = NumberSort(k, lines)
+		lines, err = NumberSort(k-1, lines)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
+			log.Println(err)
 		}
 	}
 	if r {
@@ -73,14 +77,20 @@ func main() {
 		fmt.Println(val)
 	}
 	output, err := os.Create("output.txt")
-	defer output.Close()
+	defer closeFile(output)
 
 	w := bufio.NewWriter(output)
 	for _, str := range lines {
-		w.WriteString(str + "\n")
+		_, err = w.WriteString(str + "\n")
+		if err != nil {
+			return
+		}
 	}
 
-	w.Flush()
+	err = w.Flush()
+	if err != nil {
+		return
+	}
 }
 func getNumFromColumn(n int, st string) (int, error) {
 	if len(st) == 0 {
@@ -96,27 +106,39 @@ func getNumFromColumn(n int, st string) (int, error) {
 }
 func NumberSort(n int, lines []string) ([]string, error) {
 	Nums := make([]int, 0)
-	saveMp := make(map[int]string)
+	saveMp := make(map[int][]string)
 	for _, st := range lines {
 		if st == "" {
 			continue
 		}
 		num, err := getNumFromColumn(n, st)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
+			return nil, err
 		}
-		saveMp[num] = st
+		saveMp[num] = append(saveMp[num], st)
 		Nums = append(Nums, num)
 	}
 
 	Result := make([]string, 0)
-	//fmt.Println(Nums)
 	sort.Ints(Nums)
-	for _, val := range Nums {
-		Result = append(Result, saveMp[val])
+	var been int
+	for i, val := range Nums {
+		switch {
+		case been != val:
+			tmpArr := saveMp[val]
+			sortDuplicates(tmpArr, &Result)
+			been = val
+		case i == 0:
+			tmpArr := saveMp[val]
+			sortDuplicates(tmpArr, &Result)
+			been = val
+		}
+
 	}
 	return Result, nil
 }
+
+//получаем нужное слово из строки
 func getWordFromColumn(n int, st string) string {
 	if len(st) == 0 {
 		return ""
@@ -129,32 +151,64 @@ func getWordFromColumn(n int, st string) string {
 	}
 }
 func columnSort(n int, lines []string) []string {
-	res := make([]string, 0)
 	column := make([]string, 0)
-	saveMp := make(map[string]string)
+	saveMp := make(map[string][]string)
 
 	for _, st := range lines {
 		word := getWordFromColumn(n, st)
 		if word != "" {
+			word = strings.ToLower(word)
 			column = append(column, word)
-			saveMp[word] = st
+			saveMp[word] = append(saveMp[word], st)
 		}
 	}
 	sort.Strings(column)
-	for _, word := range column {
-		res = append(res, saveMp[word])
+	Result := make([]string, 0)
+	var been string
+	for i, val := range column {
+		switch {
+		case been != val:
+			tmpArr := saveMp[val]
+			sortDuplicates(tmpArr, &Result)
+			been = val
+		case i == 0:
+			tmpArr := saveMp[val]
+			sortDuplicates(tmpArr, &Result)
+			been = val
+		}
+
 	}
-	return res
+	return Result
 }
-func deleteDuplicates(fileStrings []string) []string {
-	unique := make(map[string]struct{})
+
+//Сортируем строки с одинаковыми ключами
+func sortDuplicates(tmpArr []string, Result *[]string) {
+	sort.Strings(tmpArr)
+	for _, st := range tmpArr {
+		*Result = append(*Result, st)
+	}
+}
+func deleteDuplicates(fileStrings []string, column int) []string {
+	unique := make(map[string]string)
 
 	for _, st := range fileStrings {
-		unique[st] = struct{}{}
+		fields := strings.Fields(st)
+		key := fields[column]
+		if _, ok := unique[key]; !ok {
+			unique[key] = st
+		}
 	}
+
 	res := make([]string, 0, len(unique))
-	for st := range unique {
+	for _, st := range unique {
 		res = append(res, st)
 	}
+
 	return res
+}
+func closeFile(f *os.File) {
+	err := f.Close()
+	if err != nil {
+		return
+	}
 }
