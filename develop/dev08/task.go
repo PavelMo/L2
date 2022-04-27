@@ -37,7 +37,7 @@ func executeCommand(commands []string) {
 			fmt.Println(err)
 		}
 		for _, process := range res {
-			fmt.Printf("Name p: %v Pid: %v\n", process.Executable(), process.Pid())
+			fmt.Printf("Process name: %v Pid: %v\n", process.Executable(), process.Pid())
 		}
 	case "cd":
 		dir := strings.Join(args, "")
