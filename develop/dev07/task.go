@@ -38,7 +38,7 @@ func or(channels ...<-chan interface{}) <-chan interface{} {
 
 	for _, channel := range channels {
 		go func(channel <-chan interface{}) {
-			//Ждём в гоурутине пока закроется какой нибудь канал и главный канал получит nil интерфейс
+			//Ждём в гоурутине пока закроется какой нибудь из каналов и главный канал получит значение по умолчанию 
 			mainChan <- <-channel
 		}(channel)
 	}
