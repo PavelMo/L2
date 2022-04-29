@@ -18,14 +18,14 @@ func (s *Server) createEvent(w http.ResponseWriter, r *http.Request) {
 
 	event, err := s.DecodeJSON(r)
 	if err != nil {
-		s.Response(w, fmt.Sprintf("error occurred while decoding input data: %v", err), http.StatusBadRequest)
+		s.Response(w, fmt.Sprintf("error occurred while decoding input data: %v", err), http.StatusBadRequest, true)
 		return
 	}
 	if err = s.storage.CreateEvent(event); err != nil {
-		s.Response(w, fmt.Sprintf("error occured: %v", err), http.StatusServiceUnavailable)
+		s.Response(w, fmt.Sprintf("error occured: %v", err), http.StatusServiceUnavailable, true)
 		return
 	}
-	s.Response(w, "event created successfully", http.StatusCreated)
+	s.Response(w, "event created successfully", http.StatusCreated, false)
 }
 func (s *Server) updateEvent(w http.ResponseWriter, r *http.Request) {
 	if methodError(w, r.Method, "POST") {
@@ -33,15 +33,15 @@ func (s *Server) updateEvent(w http.ResponseWriter, r *http.Request) {
 	}
 	event, err := s.DecodeJSON(r)
 	if err != nil {
-		s.Response(w, fmt.Sprintf("error occurred while decoding input data: %v", err), http.StatusBadRequest)
+		s.Response(w, fmt.Sprintf("error occurred while decoding input data: %v", err), http.StatusBadRequest, true)
 		return
 	}
 	err = s.storage.UpdateEvent(event)
 	if err != nil {
-		s.Response(w, fmt.Sprintf("error occured while passing data to service for updating: %v", err), http.StatusServiceUnavailable)
+		s.Response(w, fmt.Sprintf("error occured while passing data to service for updating: %v", err), http.StatusServiceUnavailable, true)
 		return
 	}
-	s.Response(w, "event updated successfully", http.StatusCreated)
+	s.Response(w, "event updated successfully", http.StatusCreated, false)
 }
 func (s *Server) deleteEvent(w http.ResponseWriter, r *http.Request) {
 	if methodError(w, r.Method, "POST") {
@@ -49,11 +49,11 @@ func (s *Server) deleteEvent(w http.ResponseWriter, r *http.Request) {
 	}
 	event, err := s.DecodeJSON(r)
 	if err != nil {
-		s.Response(w, fmt.Sprintf("error occurred while decoding input data: %v", err), http.StatusBadRequest)
+		s.Response(w, fmt.Sprintf("error occurred while decoding input data: %v", err), http.StatusBadRequest, true)
 		return
 	}
 	s.storage.DeleteEvent(event)
-	s.Response(w, "event deleted successfully", http.StatusCreated)
+	s.Response(w, "event deleted successfully", http.StatusCreated, false)
 }
 func (s *Server) eventsForDay(w http.ResponseWriter, r *http.Request) {
 	if methodError(w, r.Method, "GET") {
@@ -61,12 +61,12 @@ func (s *Server) eventsForDay(w http.ResponseWriter, r *http.Request) {
 	}
 	userId, date, err := getParams(r.URL)
 	if err != nil {
-		s.Response(w, fmt.Sprintf("error occured while getting params: %v", err), http.StatusBadRequest)
+		s.Response(w, fmt.Sprintf("error occured while getting params: %v", err), http.StatusBadRequest, true)
 		return
 	}
 	events, err := s.storage.EventsForDay(userId, date)
 	if err != nil {
-		s.Response(w, fmt.Sprintf("error occured while getting events for day: %v", err), http.StatusServiceUnavailable)
+		s.Response(w, fmt.Sprintf("error occured while getting events for day: %v", err), http.StatusServiceUnavailable, true)
 		return
 	}
 	s.ResponseWithData(w, events)
@@ -78,11 +78,11 @@ func (s *Server) eventsForWeek(w http.ResponseWriter, r *http.Request) {
 	}
 	userId, date, err := getParams(r.URL)
 	if err != nil {
-		s.Response(w, fmt.Sprintf("error occured while getting params: %v", err), http.StatusBadRequest)
+		s.Response(w, fmt.Sprintf("error occured while getting params: %v", err), http.StatusBadRequest, true)
 	}
 	events, err := s.storage.EventsForWeek(userId, date)
 	if err != nil {
-		s.Response(w, fmt.Sprintf("error occured while getting events for week: %v", err), http.StatusServiceUnavailable)
+		s.Response(w, fmt.Sprintf("error occured while getting events for week: %v", err), http.StatusServiceUnavailable, true)
 		return
 	}
 	s.ResponseWithData(w, events)
@@ -93,11 +93,11 @@ func (s *Server) eventsForMonth(w http.ResponseWriter, r *http.Request) {
 	}
 	userId, date, err := getParams(r.URL)
 	if err != nil {
-		s.Response(w, fmt.Sprintf("error occured while getting params: %v", err), http.StatusBadRequest)
+		s.Response(w, fmt.Sprintf("error occured while getting params: %v", err), http.StatusBadRequest, true)
 	}
 	events, err := s.storage.EventsForMonth(userId, date)
 	if err != nil {
-		s.Response(w, fmt.Sprintf("error occured while getting events for month: %v", err), http.StatusServiceUnavailable)
+		s.Response(w, fmt.Sprintf("error occured while getting events for month: %v", err), http.StatusServiceUnavailable, true)
 		return
 	}
 	s.ResponseWithData(w, events)
@@ -109,24 +109,28 @@ func (s *Server) ResponseWithData(w http.ResponseWriter, events []model.Event) {
 	res, _ := json.MarshalIndent(events, " ", "")
 	_, err := w.Write(res)
 	if err != nil {
-		s.Response(w, err.Error(), http.StatusInternalServerError)
+		s.Response(w, err.Error(), http.StatusInternalServerError, true)
 	}
 }
-func (s *Server) Response(w http.ResponseWriter, message string, status int) {
+func (s *Server) Response(w http.ResponseWriter, message string, status int, isErr bool) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	data := struct {
-		Message    string `json:"message"`
-		StatusCode int    `json:"statusCode"`
-	}{
-		Message:    message,
-		StatusCode: status,
+	if isErr {
+		data := NewErr(message, status)
+		resp, _ := json.MarshalIndent(data, " ", "")
+		_, err := w.Write(resp)
+		if err != nil {
+			http.Error(w, fmt.Errorf("internal server error: %v", err).Error(), http.StatusInternalServerError)
+		}
+	} else {
+		data := NewResult(message, status)
+		resp, _ := json.MarshalIndent(data, " ", "")
+		_, err := w.Write(resp)
+		if err != nil {
+			http.Error(w, fmt.Errorf("internal server error: %v", err).Error(), http.StatusInternalServerError)
+		}
 	}
-	resp, _ := json.MarshalIndent(data, " ", "")
-	_, err := w.Write(resp)
-	if err != nil {
-		http.Error(w, fmt.Errorf("internal server error: %v", err).Error(), http.StatusInternalServerError)
-	}
+
 }
 func (s *Server) DecodeJSON(r *http.Request) (*model.Event, error) {
 	event := &model.Event{}
@@ -134,7 +138,6 @@ func (s *Server) DecodeJSON(r *http.Request) (*model.Event, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(event, event.EventID, event.UserID)
 	if event.UserID < 1 || event.EventID < 1 {
 		return nil, errors.New("negative Id value")
 	}
