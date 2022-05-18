@@ -65,6 +65,4 @@ func main() {
 		sig(1*time.Minute),
 	)
 	fmt.Printf("done after %v", time.Since(start))
-	<-or(sig(2 * time.Second))
-	fmt.Printf("done after %v", time.Since(start))
 }

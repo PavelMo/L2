@@ -155,89 +155,89 @@ func (a *Args) grep(lines []string, pattern string) []string {
 }
 
 //Записываем в хэш таблицу индексы строк с нужным паттерном/строкой +N строк
-func getIndexesAfter(lines []string, pattern string, Fixed, Ignore bool, N int) map[int]struct{} {
+func getIndexesAfter(lines []string, needle string, Fixed, Ignore bool, N int) map[int]struct{} {
 	indexes := make(map[int]struct{})
 	switch {
 	case Ignore && Fixed:
-		lowPatternSt := strings.ToLower(pattern)
+		lowNeedle := strings.ToLower(needle)
 		for i, st := range lines {
 			lowSt := strings.ToLower(st)
-			if lowSt == lowPatternSt {
-				getAfter(&indexes, i, N, len(lines))
+			if lowSt == lowNeedle {
+				getAfter(indexes, i, N, len(lines))
 			}
 		}
 	case Fixed:
 		for i, st := range lines {
-			if st == pattern {
-				getAfter(&indexes, i, N, len(lines))
+			if st == needle {
+				getAfter(indexes, i, N, len(lines))
 			}
 		}
 	case Ignore:
-		lowPatternSt := strings.ToLower(pattern)
+		lowNeedle := strings.ToLower(needle)
 		for i, st := range lines {
 			lowSt := strings.ToLower(st)
-			if strings.Contains(lowSt, lowPatternSt) {
-				getAfter(&indexes, i, N, len(lines))
+			if strings.Contains(lowSt, lowNeedle) {
+				getAfter(indexes, i, N, len(lines))
 			}
 		}
 	default:
 		for i, st := range lines {
-			if strings.Contains(st, pattern) {
-				getAfter(&indexes, i, N, len(lines))
+			if strings.Contains(st, needle) {
+				getAfter(indexes, i, N, len(lines))
 			}
 		}
 	}
 	return indexes
 }
-func getAfter(indexes *map[int]struct{}, i, N, lenLines int) {
+func getAfter(indexes map[int]struct{}, i, N, lenLines int) {
 	for j := i; j <= i+N && j < lenLines; j++ {
-		(*indexes)[j] = struct{}{}
+		indexes[j] = struct{}{}
 	}
 }
 
-//Записываем в хэш таблицу индексы строк с нужным паттерном/строкой +N строк
-func getIndexesBefore(lines []string, pattern string, Fixed, Ignore bool, N int) map[int]struct{} {
+//Записываем в хэш таблицу индексы строк с нужным паттерном/строкой -N строк
+func getIndexesBefore(lines []string, needle string, Fixed, Ignore bool, N int) map[int]struct{} {
 	indexes := make(map[int]struct{})
 	switch {
 	case Ignore && Fixed:
-		lowPatternSt := strings.ToLower(pattern)
+		lowNeedle := strings.ToLower(needle)
 		for i, st := range lines {
 			lowSt := strings.ToLower(st)
-			if lowSt == lowPatternSt {
-				getBefore(&indexes, i, N)
+			if lowSt == lowNeedle {
+				getBefore(indexes, i, N)
 			}
 		}
 	case Fixed:
 		for i, st := range lines {
-			if st == pattern {
-				getBefore(&indexes, i, N)
+			if st == needle {
+				getBefore(indexes, i, N)
 			}
 		}
 	case Ignore:
-		lowPatternSt := strings.ToLower(pattern)
+		lowNeedle := strings.ToLower(needle)
 		for i, st := range lines {
 			lowSt := strings.ToLower(st)
-			if strings.Contains(lowSt, lowPatternSt) {
-				getBefore(&indexes, i, N)
+			if strings.Contains(lowSt, lowNeedle) {
+				getBefore(indexes, i, N)
 			}
 		}
 	default:
 		for i, st := range lines {
-			if strings.Contains(st, pattern) {
-				getBefore(&indexes, i, N)
+			if strings.Contains(st, needle) {
+				getBefore(indexes, i, N)
 			}
 		}
 	}
 	return indexes
 }
-func getBefore(indexes *map[int]struct{}, i, N int) {
+func getBefore(indexes map[int]struct{}, i, N int) {
 	if i-N >= 0 {
 		for j := i - N; j <= i; j++ {
-			(*indexes)[j] = struct{}{}
+			indexes[j] = struct{}{}
 		}
 	} else {
 		for j := 0; j <= i; j++ {
-			(*indexes)[j] = struct{}{}
+			indexes[j] = struct{}{}
 		}
 	}
 }

@@ -63,7 +63,7 @@ func main() {
 		for _, field := range parse {
 			digit, err := strconv.Atoi(field)
 			if digit == 0 || err != nil {
-				log.Println("Incorrect input")
+				log.Fatalln("Incorrect input")
 			}
 			numFields = append(numFields, digit)
 		}
