@@ -116,13 +116,11 @@ func (a *Args) grep(lines []string, pattern string) []string {
 	if a.B < a.C {
 		a.B = a.C
 	}
-
 	if a.v {
 		afterMap = getIndexesAfter(lines, pattern, a.F, a.i, 0)
 		for i, st := range lines {
 			_, aOk := afterMap[i]
-			_, bOk := beforeMap[i]
-			if !aOk && !bOk {
+			if !aOk {
 				res = append(res, st)
 			}
 		}

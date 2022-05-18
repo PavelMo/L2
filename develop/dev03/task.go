@@ -47,6 +47,7 @@ func main() {
 	var lines = make([]string, 0)
 	if len(flag.Args()) < 1 {
 		log.Println("no files to sort")
+		os.Exit(1)
 	}
 	for _, val := range flag.Args() {
 		input, _ := os.Open(val)
@@ -83,15 +84,17 @@ func main() {
 	for _, str := range lines {
 		_, err = w.WriteString(str + "\n")
 		if err != nil {
-			return
+			log.Println(err)
 		}
 	}
 
 	err = w.Flush()
 	if err != nil {
-		return
+		log.Println(err)
 	}
 }
+
+//Получаем цифру из строки с номером нужной колонки
 func getNumFromColumn(n int, st string) (int, error) {
 	if len(st) == 0 {
 		return 0, errors.New("empty string")
@@ -126,11 +129,17 @@ func NumberSort(n int, lines []string) ([]string, error) {
 		switch {
 		case been != val:
 			tmpArr := saveMp[val]
-			sortDuplicates(tmpArr, &Result)
+			if len(tmpArr) < 2 {
+				for _, st := range tmpArr {
+					Result = append(Result, st)
+				}
+			} else {
+				sortDuplicates(tmpArr, &Result, n)
+			}
 			been = val
 		case i == 0:
 			tmpArr := saveMp[val]
-			sortDuplicates(tmpArr, &Result)
+			sortDuplicates(tmpArr, &Result, n)
 			been = val
 		}
 
@@ -138,7 +147,7 @@ func NumberSort(n int, lines []string) ([]string, error) {
 	return Result, nil
 }
 
-//получаем нужное слово из строки
+//получаем слово из строки с номером нужной колонки
 func getWordFromColumn(n int, st string) string {
 	if len(st) == 0 {
 		return ""
@@ -169,11 +178,17 @@ func columnSort(n int, lines []string) []string {
 		switch {
 		case been != val:
 			tmpArr := saveMp[val]
-			sortDuplicates(tmpArr, &Result)
+			if len(tmpArr) < 2 {
+				for _, st := range tmpArr {
+					Result = append(Result, st)
+				}
+			} else {
+				sortDuplicates(tmpArr, &Result, n)
+			}
 			been = val
 		case i == 0:
 			tmpArr := saveMp[val]
-			sortDuplicates(tmpArr, &Result)
+			sortDuplicates(tmpArr, &Result, n)
 			been = val
 		}
 
@@ -182,15 +197,16 @@ func columnSort(n int, lines []string) []string {
 }
 
 //Сортируем строки с одинаковыми ключами
-func sortDuplicates(tmpArr []string, Result *[]string) {
-	sort.Strings(tmpArr)
+func sortDuplicates(tmpArr []string, Result *[]string, n int) {
+	//Сортируем одинаковые колонки как делает это утилита sort
+	sort.Strings(tmpArr[n:])
 	for _, st := range tmpArr {
 		*Result = append(*Result, st)
 	}
 }
 func deleteDuplicates(fileStrings []string, column int) []string {
 	unique := make(map[string]string)
-
+	//Ищем уникальные слова в колонке
 	for _, st := range fileStrings {
 		fields := strings.Fields(st)
 		key := fields[column]

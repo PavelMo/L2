@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	"os"
+	"log"
 	"strconv"
 	"strings"
 	"unicode"
@@ -43,6 +43,7 @@ func Unpack(st string) (string, error) {
 				i++
 				continue
 			}
+			//Если бэкслеш, то пропускаем его и падаем дальше
 			i++
 			fallthrough
 		case i == len(runes)-1:
@@ -58,7 +59,7 @@ func Unpack(st string) (string, error) {
 					countSt strings.Builder
 					iSkip   int
 				)
-
+				//Получаем полное число
 				for j := i + 1; j < len(runes) && unicode.IsDigit(runes[j]); {
 					countSt.WriteString(string(runes[j]))
 					j += 1
@@ -87,10 +88,7 @@ func main() {
 	for _, st := range list {
 		unpacked, err := Unpack(st)
 		if err != nil {
-			_, err = fmt.Fprintln(os.Stderr, err)
-			if err != nil {
-				fmt.Println(err)
-			}
+			log.Println(err)
 		} else {
 			fmt.Println(unpacked)
 		}

@@ -30,6 +30,7 @@ func findAnagrams(dictionary []string) map[string][]string {
 	for _, val := range dictionary {
 
 		key := strings.ToLower(val)
+		//Получаем отсортированный по алфавиту ключ
 		dirtyKey := getChars(key)
 
 		if _, ok := unique[key]; !ok {
