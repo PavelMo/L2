@@ -21,6 +21,7 @@ func test() *customError {
 func main() {
 	var err error
 	err = test()
+	//fmt.Printf("%#v\n", err) //(*main.customError)(nil)
 	if err != nil {
 		println("error")
 		return
@@ -44,6 +45,5 @@ type iface struct {
 }
 В поле tab хранится информация о конкретном типе объекта, который был преобразован в интерфейс.
 В поле data - ссылка на реальную область памяти, в которой лежат данные изначального объекта, в нашем случае customError.
-fmt.Printf("%#v\n", err) //(*main.customError)(nil)
 Интерфейс может быть равен nil только если оба поля tab и data не определены.
 ```
