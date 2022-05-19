@@ -33,10 +33,10 @@ func main() {
 	flag.Parse()
 
 	if len(f) < 1 {
-		log.Println("you need to specify a field")
+		log.Fatalln("you need to specify a field")
 	}
 	if len(flag.Args()) < 1 {
-		log.Println("file is not specified")
+		log.Fatalln("file is not specified")
 	}
 	file, err := os.Open(flag.Args()[0])
 	defer func(file *os.File) {
