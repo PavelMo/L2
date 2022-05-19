@@ -39,38 +39,33 @@ func main() {
 		log.Fatalln("file is not specified")
 	}
 	file, err := os.Open(flag.Args()[0])
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-
-		}
-	}(file)
 	if err != nil {
 		log.Fatalln(err)
 	}
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}(file)
 	scanner := bufio.NewScanner(file)
 	lines := make([]string, 0)
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 	}
-	if d == "" {
-		for _, st := range lines {
-			fmt.Println(st)
+
+	parse := strings.Split(f, ",")
+	numFields := make([]int, 0)
+	for _, field := range parse {
+		digit, err := strconv.Atoi(field)
+		if digit == 0 || err != nil {
+			log.Fatalln("Incorrect input")
 		}
-	} else {
-		parse := strings.Split(f, ",")
-		numFields := make([]int, 0)
-		for _, field := range parse {
-			digit, err := strconv.Atoi(field)
-			if digit == 0 || err != nil {
-				log.Fatalln("Incorrect input")
-			}
-			numFields = append(numFields, digit)
-		}
-		Result := cut(lines, numFields, d, s)
-		for _, st := range Result {
-			fmt.Println(st)
-		}
+		numFields = append(numFields, digit)
+	}
+	Result := cut(lines, numFields, d, s)
+	for _, st := range Result {
+		fmt.Println(st)
 	}
 
 }
