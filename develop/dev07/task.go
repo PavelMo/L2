@@ -59,8 +59,7 @@ func main() {
 	<-or(
 		sig(2*time.Hour),
 		sig(5*time.Minute),
-		sig(2*time.Second),
-		sig(1*time.Minute),
+		sig(1*time.Second),
 		sig(1*time.Hour),
 		sig(1*time.Minute),
 	)

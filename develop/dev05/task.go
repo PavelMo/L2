@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -107,8 +108,7 @@ func main() {
 
 }
 func (a *Args) grep(lines []string, pattern string) []string {
-	afterMap := make(map[int]struct{})
-	beforeMap := make(map[int]struct{})
+	indexesToWrite := make(map[int]struct{})
 	res := make([]string, 0)
 	if a.A < a.C {
 		a.A = a.C
@@ -117,24 +117,23 @@ func (a *Args) grep(lines []string, pattern string) []string {
 		a.B = a.C
 	}
 	if a.v {
-		afterMap = getIndexesAfter(lines, pattern, a.F, a.i, 0)
+		indexesToWrite = getIndexesAfter(indexesToWrite, lines, pattern, a.F, a.i, 0)
 		for i, st := range lines {
-			_, aOk := afterMap[i]
-			if !aOk {
+			_, inMap := indexesToWrite[i]
+			if !inMap {
 				res = append(res, st)
 			}
 		}
 		return res
 	}
-	afterMap = getIndexesAfter(lines, pattern, a.F, a.i, a.A)
+	getIndexesAfter(indexesToWrite, lines, pattern, a.F, a.i, a.A)
 	if a.B > 0 {
-		beforeMap = getIndexesBefore(lines, pattern, a.F, a.i, a.B)
+		getIndexesBefore(indexesToWrite, lines, pattern, a.F, a.i, a.B)
 	}
 	var skipLines bool
 	for i, st := range lines {
-		_, aOk := afterMap[i]
-		_, bOk := beforeMap[i]
-		if aOk || bOk {
+		_, inMap := indexesToWrite[i]
+		if inMap {
 			if a.n {
 				res = append(res, fmt.Sprintf("%d:%s", i+1, st))
 				//skipLines = true
@@ -155,39 +154,46 @@ func (a *Args) grep(lines []string, pattern string) []string {
 }
 
 //Записываем в хэш таблицу индексы строк с нужным паттерном/строкой +N строк
-func getIndexesAfter(lines []string, needle string, Fixed, Ignore bool, N int) map[int]struct{} {
-	indexes := make(map[int]struct{})
+func getIndexesAfter(indexesToWrite map[int]struct{}, lines []string, needle string, Fixed, Ignore bool, N int) map[int]struct{} {
 	switch {
 	case Ignore && Fixed:
 		lowNeedle := strings.ToLower(needle)
 		for i, st := range lines {
 			lowSt := strings.ToLower(st)
 			if lowSt == lowNeedle {
-				getAfter(indexes, i, N, len(lines))
+				getAfter(indexesToWrite, i, N, len(lines))
 			}
 		}
 	case Fixed:
 		for i, st := range lines {
 			if st == needle {
-				getAfter(indexes, i, N, len(lines))
+				getAfter(indexesToWrite, i, N, len(lines))
 			}
 		}
 	case Ignore:
 		lowNeedle := strings.ToLower(needle)
 		for i, st := range lines {
 			lowSt := strings.ToLower(st)
-			if strings.Contains(lowSt, lowNeedle) {
-				getAfter(indexes, i, N, len(lines))
+			ok, err := regexp.MatchString(lowNeedle, lowSt)
+			if err != nil {
+				continue
+			}
+			if ok {
+				getAfter(indexesToWrite, i, N, len(lines))
 			}
 		}
 	default:
 		for i, st := range lines {
-			if strings.Contains(st, needle) {
-				getAfter(indexes, i, N, len(lines))
+			ok, err := regexp.MatchString(needle, st)
+			if err != nil {
+				continue
+			}
+			if ok {
+				getAfter(indexesToWrite, i, N, len(lines))
 			}
 		}
 	}
-	return indexes
+	return indexesToWrite
 }
 func getAfter(indexes map[int]struct{}, i, N, lenLines int) {
 	for j := i; j <= i+N && j < lenLines; j++ {
@@ -196,39 +202,45 @@ func getAfter(indexes map[int]struct{}, i, N, lenLines int) {
 }
 
 //Записываем в хэш таблицу индексы строк с нужным паттерном/строкой -N строк
-func getIndexesBefore(lines []string, needle string, Fixed, Ignore bool, N int) map[int]struct{} {
-	indexes := make(map[int]struct{})
+func getIndexesBefore(indexesToWrite map[int]struct{}, lines []string, needle string, Fixed, Ignore bool, N int) {
 	switch {
 	case Ignore && Fixed:
 		lowNeedle := strings.ToLower(needle)
 		for i, st := range lines {
 			lowSt := strings.ToLower(st)
 			if lowSt == lowNeedle {
-				getBefore(indexes, i, N)
+				getBefore(indexesToWrite, i, N)
 			}
 		}
 	case Fixed:
 		for i, st := range lines {
 			if st == needle {
-				getBefore(indexes, i, N)
+				getBefore(indexesToWrite, i, N)
 			}
 		}
 	case Ignore:
 		lowNeedle := strings.ToLower(needle)
 		for i, st := range lines {
 			lowSt := strings.ToLower(st)
-			if strings.Contains(lowSt, lowNeedle) {
-				getBefore(indexes, i, N)
+			ok, err := regexp.MatchString(lowNeedle, lowSt)
+			if err != nil {
+				continue
+			}
+			if ok {
+				getBefore(indexesToWrite, i, N)
 			}
 		}
 	default:
 		for i, st := range lines {
-			if strings.Contains(st, needle) {
-				getBefore(indexes, i, N)
+			ok, err := regexp.MatchString(needle, st)
+			if err != nil {
+				continue
+			}
+			if ok {
+				getBefore(indexesToWrite, i, N)
 			}
 		}
 	}
-	return indexes
 }
 func getBefore(indexes map[int]struct{}, i, N int) {
 	if i-N >= 0 {

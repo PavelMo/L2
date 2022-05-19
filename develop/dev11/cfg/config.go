@@ -13,7 +13,7 @@ func NewCFG() *Config {
 	return &Config{}
 }
 func (c *Config) GetCfg() (string, error) {
-	yml, err := ioutil.ReadFile("C:\\Users\\pavel\\OneDrive\\Рабочий стол\\L2\\develop\\dev11\\cfg\\config.yml")
+	yml, err := ioutil.ReadFile("/home/paul/GolandProjects/L2Git/develop/dev11/cfg/config.yml")
 	if err != nil {
 		return "", err
 	}

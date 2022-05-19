@@ -171,7 +171,7 @@ func parseDate(date string) (time.Time, error) {
 }
 func methodError(w http.ResponseWriter, req, needle string) bool {
 	if req != needle {
-		http.Error(w, fmt.Sprintf("expected: %s, got:%s", needle, req), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("expected: %s, got:%s", needle, req), http.StatusBadRequest)
 	}
 	return req != needle
 }

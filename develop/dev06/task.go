@@ -46,7 +46,7 @@ func main() {
 		}
 	}(file)
 	if err != nil {
-		log.Println(err)
+		log.Fatalln(err)
 	}
 	scanner := bufio.NewScanner(file)
 	lines := make([]string, 0)
@@ -77,9 +77,11 @@ func main() {
 func cut(lines []string, numFields []int, delim string, sep bool) []string {
 	Result := make([]string, 0)
 	for _, st := range lines {
+		//Делим строку по разделителю
 		fields := strings.Split(st, delim)
 		if len(fields)-1 > 0 {
 			var resSt string
+			//Находим нужную колонку
 			for i, field := range numFields {
 				if len(fields) >= field {
 					if i > 0 {
@@ -90,6 +92,7 @@ func cut(lines []string, numFields []int, delim string, sep bool) []string {
 
 				}
 			}
+			//Записываем в результат
 			Result = append(Result, resSt)
 		} else if !sep {
 			Result = append(Result, st)

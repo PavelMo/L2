@@ -27,8 +27,7 @@ func executeCommand(commands []string) {
 	case "pwd":
 		dir, err := os.Getwd()
 		if err != nil {
-			fmt.Println(err)
-			break
+			log.Println(err)
 		}
 		fmt.Println(dir)
 	case "ps":
